@@ -1,0 +1,11 @@
+import face_recognition as fr 
+import cv2
+
+img_andre = fr.load_image_file("/home/andre/Documentos/projeto_reconhecimento/testando/andre.png")
+
+
+cv2.imshow("Imagem André", img_andre) 
+cv2.waitKey(0)
+
+
+
