@@ -1,11 +1,26 @@
 import face_recognition as fr 
 import cv2
 
-img_andre = fr.load_image_file("/home/andre/Documentos/projeto_reconhecimento/testando/andre.png")
+img_andre = fr.load_image_file("testando/andre.png")
+img_andre = cv2.cvtColor(img_andre, cv2.COLOR_BGR2RGB)
+img_duda = fr.load_image_file("testando/duda.jpg")
+img_duda = cv2.cvtColor(img_duda, cv2.COLOR_BGR2RGB)
+
+faceloc = fr.face_locations(img_andre) 
+print(faceloc)
+print(f"Dimensões da Imagem André: {img_andre.shape}")
+
+top, right, bottom, left = faceloc[0]
+# cv2.rectangle precisa dos pontos (x1, y1) e (x2, y2)
+# Ponto 1 (Top-Left): (left, top)
+# Ponto 2 (Bottom-Right): (right, bottom)
+cv2.rectangle(img_andre, (left, top), (right, bottom), (0, 255, 0), 2)
+cv2.imwrite("imagem_final_com_retangulo.png", img_andre)
+print("Imagem salva com sucesso! Procure por 'imagem_final_com_retangulo.png' na pasta do seu projeto.")
 
 
-cv2.imshow("Imagem André", img_andre) 
-cv2.waitKey(0)
+
+
 
 
 
