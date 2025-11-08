@@ -22,3 +22,17 @@ dlip
 face-recognition
 opencv-python 
 ]
+
+
+
+#Fazer uma pasta com um main, um monitoramento de tela usando a camera,]
+#  um treiner e uma comparação
+
+dataset.csv 
+
+dataset .data 
+ver dataset.data 
+
+converter para .csv 
+
+
