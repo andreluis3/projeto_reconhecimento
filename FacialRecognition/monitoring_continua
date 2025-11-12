@@ -1,0 +1,90 @@
+import cv2
+import face_recognition
+import pickle
+import numpy as np
+import os
+import time
+
+# === Caminho absoluto do arquivo encodings.pkl ===
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+ENCODINGS_PATH = os.path.join(BASE_DIR, "encodings.pkl")
+
+# === 1. Carregar encodings ===
+print("Carregando encodings...")
+try:
+    with open(ENCODINGS_PATH, "rb") as f:
+        data = pickle.load(f)
+    
+    known_encodings = data["encodings"]
+    known_names = data["names"]
+    print(f"Encodings carregados para: {set(known_names)}")
+except Exception as e:
+    print(f"Erro ao carregar encodings: {e}")
+    exit()
+
+
+cap = cv2.VideoCapture(0)
+cap.set(3, 900)  # Largura
+cap.set(4, 900)  # Altura
+
+print("Iniciando monitoramento facial pela webcam...")
+print("Pressione 'ESC' para sair")
+
+fps_counter = 0
+fps_time = time.time()
+
+while True:
+    ret, frame = cap.read()
+    if not ret:
+        break
+
+    # Converter BGR para RGB
+    rgb_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+    
+    # Detectar faces
+    face_locations = face_recognition.face_locations(rgb_frame)
+    face_encodings = face_recognition.face_encodings(rgb_frame, face_locations)
+
+    face_names = []
+    for face_encoding in face_encodings:
+        matches = face_recognition.compare_faces(known_encodings, face_encoding, tolerance=0.6)
+        name = "Desconhecido"
+        
+        face_distances = face_recognition.face_distance(known_encodings, face_encoding)
+        
+        if len(face_distances) > 0:
+            best_match_index = np.argmin(face_distances)
+            if matches[best_match_index]:
+                name = known_names[best_match_index]
+                confidence = 1 - face_distances[best_match_index]
+                name = f"{name} ({confidence:.2f})"
+
+        face_names.append(name)
+
+    # Desenhar resultados
+    for (top, right, bottom, left), name in zip(face_locations, face_names):
+        color = (0, 255, 0) if "Desconhecido" not in name else (0, 0, 255)
+        
+        cv2.rectangle(frame, (left, top), (right, bottom), color, 2)
+        cv2.rectangle(frame, (left, bottom - 35), (right, bottom), color, cv2.FILLED)
+        cv2.putText(frame, name, (left + 6, bottom - 10),
+                    cv2.FONT_HERSHEY_DUPLEX, 0.6, (255, 255, 255), 1)
+
+    # FPS
+    fps_counter += 1
+    if time.time() - fps_time >= 1.0:
+        fps = fps_counter
+        fps_counter = 0
+        fps_time = time.time()
+        cv2.putText(frame, f"FPS: {fps}", (10, 30), 
+                   cv2.FONT_HERSHEY_SIMPLEX, 0.7, (255, 255, 255), 2)
+
+    cv2.imshow("Monitor de Reconhecimento Facial - Webcam", frame)
+
+    key = cv2.waitKey(1) & 0xFF
+    if key == 27:  # ESC
+        break
+
+cap.release()
+cv2.destroyAllWindows()
+print("Monitoramento encerrado.")
